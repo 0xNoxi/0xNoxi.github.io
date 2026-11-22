@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "plugins": {
+    "quartz-particles": {
+      "source": "./quartz-particles",
+      "resolved": "C:\\Projects\\Blog\\0xNoxi.github.io\\quartz-particles",
+      "commit": "local",
+      "installedAt": "2026-11-22T21:49:54.830Z"
+    }
+  }
+}

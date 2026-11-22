@@ -1,0 +1,31 @@
+import { createRequire } from 'module';
+
+createRequire(import.meta.url);
+
+// src/components/particles.inline.ts
+var particles_inline_default = 'var i={color:"#9fef00",density:9e3,maxPerZone:70,linkDist:130,mouseDist:160,speed:.5,dotAlpha:.8,lineAlpha:.35};function A(){if(!window.matchMedia("(prefers-reduced-motion: reduce)").matches){if(!window.__pc){let c=document.createElement("canvas");c.id="particles-bg",window.__pc=c;let o=c.getContext("2d"),a={x:-9999,y:-9999},x=[{x0:0,x1:0,pts:[]},{x0:0,x1:0,pts:[]}],r=0,d=0,p=i.color,y=0,m=-1,f=-1,M=()=>{let t=document.querySelector(".center")||document.querySelector("article");if(t){let n=t.getBoundingClientRect();if(n.width>0)return{l:n.left,r:n.right}}return{l:r*.2,r:r*.8}},b=t=>{let n=t.x1-t.x0;if(n<80){t.pts=[];return}let e=Math.min(i.maxPerZone,Math.floor(n*d/i.density));for(let s of t.pts)(s.x<t.x0||s.x>t.x1)&&(s.x=t.x0+Math.random()*n);for(;t.pts.length<e;)t.pts.push({x:t.x0+Math.random()*n,y:Math.random()*d,vx:(Math.random()-.5)*i.speed*2,vy:(Math.random()-.5)*i.speed*2,r:Math.random()*1.5+1});for(;t.pts.length>e;)t.pts.pop()},u=()=>{let t=M();Math.abs(t.l-m)<1&&Math.abs(t.r-f)<1||(m=t.l,f=t.r,x[0].x0=0,x[0].x1=Math.max(0,t.l),x[1].x0=Math.min(r,t.r),x[1].x1=r,x.forEach(b))},w=()=>{let t=window.devicePixelRatio||1;r=window.innerWidth,d=window.innerHeight,c.width=r*t,c.height=d*t,c.style.width=r+"px",c.style.height=d+"px",o.setTransform(t,0,0,t,0,0),m=-1,u()};window.addEventListener("resize",w),window.addEventListener("mousemove",t=>{a.x=t.clientX,a.y=t.clientY}),document.addEventListener("mouseleave",()=>{a.x=-9999,a.y=-9999});let g=()=>{y++,y%60===0&&(p=getComputedStyle(document.documentElement).getPropertyValue("--particle-color").trim()||i.color),u(),o.clearRect(0,0,r,d),o.fillStyle=p,o.strokeStyle=p;for(let t of x){let n=t.pts;for(let e of n){e.x+=e.vx,e.y+=e.vy,(e.x<t.x0||e.x>t.x1)&&(e.vx*=-1,e.x=Math.min(Math.max(e.x,t.x0),t.x1)),(e.y<0||e.y>d)&&(e.vy*=-1);let s=e.x-a.x,h=e.y-a.y,l=Math.hypot(s,h);l<i.mouseDist&&l>0&&(e.x+=s/l*1.2,e.y+=h/l*1.2,o.globalAlpha=(1-l/i.mouseDist)*i.lineAlpha*1.5,o.beginPath(),o.moveTo(e.x,e.y),o.lineTo(a.x,a.y),o.stroke()),o.globalAlpha=i.dotAlpha,o.beginPath(),o.arc(e.x,e.y,e.r,0,Math.PI*2),o.fill()}for(let e=0;e<n.length;e++)for(let s=e+1;s<n.length;s++){let h=n[e],l=n[s],v=Math.hypot(h.x-l.x,h.y-l.y);v<i.linkDist&&(o.globalAlpha=(1-v/i.linkDist)*i.lineAlpha,o.beginPath(),o.moveTo(h.x,h.y),o.lineTo(l.x,l.y),o.stroke())}}o.globalAlpha=1,requestAnimationFrame(g)};w(),g()}window.__pc.isConnected||document.body.appendChild(window.__pc)}}document.addEventListener("nav",A);\n';
+
+// src/components/Particles.tsx
+var css = `
+#particles-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.page {
+  position: relative;
+  z-index: 1;
+}
+`;
+var Particles_default = (() => {
+  const Particles = () => null;
+  Particles.css = css;
+  Particles.afterDOMLoaded = particles_inline_default;
+  return Particles;
+});
+
+export { Particles_default as Particles };
+//# sourceMappingURL=index.js.map
+//# sourceMappingURL=index.js.map
