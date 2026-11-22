@@ -1,6 +1,10 @@
 ---
-title: Welcome to Quartz
+title: root@0xNoxi:~#
 ---
 
-This is a blank Quartz installation.
-See the [documentation](https://quartz.jzhao.xyz) for how to get started.
+## Welcome Ethical Hackers and those who are interested in CyberSecurity!
+
+---
+
+*Notes, write-ups and lessons learned from my journey in offensive security. I write to understand things better and to help others who are on the same path.*
+
