@@ -8,7 +8,7 @@
 <br></br>
 
 > [!example] **Briefing**
-> **Authority is an medium-rated Windows machine which is part of the CPTS Preparation Track on Hack The Box. It runs an Active Directory environment, a web application, and a file-sharing service called Server Message Block (SMB).**
+> **Authority is a medium-rated Windows machine which is part of the CPTS Preparation Track on Hack The Box. It runs an Active Directory environment, a web application, and a file-sharing service called Server Message Block (SMB).**
 > 
 > **The machine challenges users to exploit SMB misconfigurations, such as anonymous access and insufficient permissions, which can lead to the disclosure of sensitive information. Credentials discovered in the exposed files provide access to a web application running Apache Tomcat Configuration Editor.** 
 > **By accessing the Configuration Editor, we can manipulate the LDAP connection settings and capture additional credentials. These credentials allow us to exploit the ESC1 vulnerability in Active Directory Certificate Services (AD CS), obtain a certificate for the Administrator account, and ultimately gain administrative access to the domain.**
@@ -32,9 +32,9 @@
 <h2 style="text-align:center;color:#595454"><span style="color:#ff7b00"></span> Nmap: SYN Initial Scan <span style="color:#ff7b00"></span></h2>
 <br></br>
 
-**We will begin this CTF with an Nmap scan, if you following along with it I recommend making a folder structure like `/home/kali/htb/authority/nmap` to keep things a little clearer.**
+**We will begin this CTF with an Nmap scan, if you're following along with it I recommend making a folder structure like `/home/kali/htb/authority/nmap` to keep things a little clearer.**
 
-**By using Nmap, we can first scan for ports without additional information such as service or version to do this, we use the `-sS` option (SYN scan) and save the output in our newly created `nmap` directory.**
+**By using Nmap, we can first scan for ports without additional information such as service or version. To do this, we use the `-sS` option (SYN scan) and save the output in our newly created `nmap` directory.**
 
 ```
 nmap -Pn -sS -T4 -p- -v 10.129.229.56 -oA authority_initial
@@ -55,7 +55,7 @@ nmap -Pn -sS -T4 -p- -v 10.129.229.56 -oA authority_initial
 <h3 style="text-align:center;color:#595454"><span style="color:#ff7b00"></span> Grep All Ports from Nmap Output <span style="color:#ff7b00"></span></h3>
 <br></br>
 
-**Use `grep` command, `cut` and `paste` to get only the ports seperated by a comma Which we need for our next scan.**
+**Use `grep` command, `cut` and `paste` to get only the ports separated by a comma Which we need for our next scan.**
 
 ```
 grep -E '^[0-9]+/tcp[[:space:]]+open' authority_initial.nmap | cut -d '/' -f1 | paste -sd,
@@ -68,7 +68,7 @@ grep -E '^[0-9]+/tcp[[:space:]]+open' authority_initial.nmap | cut -d '/' -f1 | 
 | ---------------------- | ------------------------------------------------------------------------ |
 | **`-E`**               | Allows advanced regex syntax.                                            |
 | **`^`**                | Start of line                                                            |
-| **`[0-9]+/tcp`**       | One ore more numbers, and string "/tcp"                                  |
+| **`[0-9]+/tcp`**       | One or more numbers, and string "/tcp"                                  |
 | **`[[:space:]]+open`** | at least one space or tab, and string "open"                             |
 | **`cut -d '/' -f1`**   | use "/" as delimiter and keep the first field from the Nmap output file. |
 | **`-s`**               | do not print lines not containing delimiters                             |
@@ -282,7 +282,7 @@ cat PWM/defaults/main.yml
 ---
 
 > [!summary] Plan the Next Steps
-> The official Ansible documentation provides instructions on how to decrypt these hashes. It also includes an example of the required hash format as well as a password is being required. To match this format, we first need to convert the extracted hashes using John the Ripper and than crack the hash to get it's password using a password-cracking tool like Hashcat. 
+> The official Ansible documentation provides instructions on how to decrypt these hashes. It also includes an example of the required hash format as well as and a password is required. To match this format, we first need to convert the extracted hashes using John the Ripper and then crack the hash to get it's password using a password-cracking tool like Hashcat. 
 
 ---
 
@@ -549,7 +549,7 @@ Certipy v5.1.0 - by Oliver Lyak (ly4k)
 certipy-ad auth -ldap-shell -pfx administrator_authority.pfx -dc-ip 10.129.229.56 -username administrator -domain authority.htb
 ```
 
-**The `help` command lists commands, there sytax and a short description.** 
+**The `help` command lists commands, their syntax and a short description.** 
 **The syntax to change the password would be:**
 
 ```
@@ -568,7 +568,7 @@ change_password administrator N3wP455w0rD
 
 <br></br>
 
-**Looking into the Nmap scan once more port `5985` is open by default the service running here is `WinRM HTTP`. Making use of `evil-winrm` we are connecting remote to the domain logging in as administrator.** 
+**Looking into the Nmap scan once more port `5985` is open by default the service running here is `WinRM HTTP`. Making use of `evil-winrm`connecting remotely to the domain as administrator.** 
 ```
 evil-winrm -i 10.129.229.56 -u administrator -p 'N3wP455w0rD'
 ```
