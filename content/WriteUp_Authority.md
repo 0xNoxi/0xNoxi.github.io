@@ -8,8 +8,8 @@
 <br></br>
 
 > [!example] **Briefing**
-> **Authority is a medium-rated Windows machine which is part of the CPTS Preparation Track on Hack The Box. It runs an Active Directory environment, a web application, and a file-sharing service called Server Message Block (SMB).**
-> 
+> **Authority is a medium-rated Windows machine which is part of the CPTS Preparation Track on Hack The Box.**
+>
 > **The machine challenges users to exploit SMB misconfigurations, such as anonymous access and insufficient permissions, which can lead to the disclosure of sensitive information. Credentials discovered in the exposed files provide access to a web application running Apache Tomcat Configuration Editor.** 
 > **By accessing the Configuration Editor, we can manipulate the LDAP connection settings and capture additional credentials. These credentials allow us to exploit the ESC1 vulnerability in Active Directory Certificate Services (AD CS), obtain a certificate for the Administrator account, and ultimately gain administrative access to the domain.**
 
@@ -55,7 +55,7 @@ nmap -Pn -sS -T4 -p- -v 10.129.229.56 -oA authority_initial
 <h3 style="text-align:center;color:#595454"><span style="color:#ff7b00"></span> Grep All Ports from Nmap Output <span style="color:#ff7b00"></span></h3>
 <br></br>
 
-**Use `grep` command, `cut` and `paste` to get only the ports separated by a comma Which we need for our next scan.**
+**Use the `grep`, `cut`, and `paste` commands to extract only the open ports, separated by commas which we need for our next scan.**
 
 ```
 grep -E '^[0-9]+/tcp[[:space:]]+open' authority_initial.nmap | cut -d '/' -f1 | paste -sd,
@@ -80,7 +80,7 @@ grep -E '^[0-9]+/tcp[[:space:]]+open' authority_initial.nmap | cut -d '/' -f1 | 
 
 <br></br>
 
-**For further enumeration we use `-sV`, but instead of scanning all ports again we use the list we just created. I will not use any ports which have been marked as "unknown". 
+**For further enumeration, we use `-sV`, but instead of scanning all ports again, we reuse the list we just created. Ports marked as "unknown" are excluded, since they wouldn't provide reliable results.** 
 
 ```
 ┌──(kali㉿kali)-[~/htb/authority/nmap]
@@ -104,7 +104,7 @@ grep -E '^[0-9]+/tcp[[:space:]]+open' authority_initial.nmap | cut -d '/' -f1 | 
 
 ---
 
-> [!important] Finding A Starting Point
+> [!important] Identifying the Entry Point
 > Since no initial credentials were provided and we already know that our target is running Active Directory, a good starting point would be to enumerate exposed services such as SMB, checking for potential anonymous access. 
 
 ---
@@ -275,7 +275,10 @@ PWM/templates/tomcat-users.xml.j2
 cat PWM/defaults/main.yml
 ```
 
+**Searching through the files we just filtered, `main.yml` contains three vault hashes.** 
+
 ![[Pasted image 20261114213026.png|410]]
+
 
 <br></br>
 
@@ -285,8 +288,6 @@ cat PWM/defaults/main.yml
 > The official Ansible documentation provides instructions on how to decrypt these hashes. It also includes an example of the required hash format as well as and a password is required. To match this format, we first need to convert the extracted hashes using John the Ripper and then crack the hash to get it's password using a password-cracking tool like Hashcat. 
 
 ---
-
-<br></br>
 
 <h3 style="text-align:center;color:#595454"><span style="color:#ff7b00"></span> Preparing Vault Hash File <span style="color:#ff7b00"></span></h3>
 
@@ -345,7 +346,7 @@ $ansible$0*0*2fe48d56e7e16f71c18abd22085f39f4fb11a2b9a456cf4b72ec825fc5b9809d*e0
 <h2 style="text-align:center;color:#595454"><span style="color:#ff7b00"></span> Cracking Ansible Vault Hash Password <span style="color:#ff7b00"></span></h2>
 <br></br>
 
-**Searching for "$ansible" on "[Hashcat_Example_Hashes](https://hashcat.net/wiki/doku.php?id=example_hashes)" confirms we can crack this hash using the mode `16900`.** 
+**Hashcat supports hundreds of hash types, each identified by a specific mode number. To find the correct one for our Ansible Vault hash, we search for "$ansible" on [Hashcat's Example Hashes](https://hashcat.net/wiki/doku.php?id=example_hashes) page, which lists example hashes alongside their corresponding mode. This confirms that mode `16900` is the correct choice for cracking Ansible Vault hashes.**
 ### Hashcat
 ```
 ┌──(kali㉿kali)-[~/htb/authority/Ansible]
@@ -406,7 +407,6 @@ DevT3st@123
 | **Server Message Block**                  | If we can login to SMB we probably can access the share `Department Shares`.                                                         |
 | **Lightweight Directory Access Protocol** | If the credentials fit here there are multiple things we could do, like getting the Bloodhound file to enumerate the Domain further. |
 | **Apache Tomcat**                         | There is a Web Application navigating to https://10.129.229.56:8443/                                                                 |
-| **Remote Procedure Call**                 | This tool performs MS-RPC functions, this comes in handy for more information gathering.                                             |
 
 ---
 
@@ -414,8 +414,8 @@ DevT3st@123
 
 <br></br>
 
-**Go to https://10.129.229.56:8443/ - Apache Tomcat and navigating to "Configuration Editor".** 
-**The password `pWm_@dm!N_!23` gives access to the Config Editor.** 
+**Out of the services listed above, the web application stood out as the easiest next step.**
+**Navigating to [https://10.129.229.56:8443/](https://10.129.229.56:8443/) leads us to the Apache Tomcat application, where we access the "Configuration Editor" the password `pWm_@dm!N_!23` grants us access.**
 
 ![[Pasted image 20261116175026.png|394]]
 
