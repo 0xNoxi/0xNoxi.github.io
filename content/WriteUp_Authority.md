@@ -469,7 +469,7 @@ nxc ldap 10.129.229.56 -u 'svc_ldap' -p 'lDaP_1n_th3_cle4r!' -d authority.htb --
 
 
 > [!info] Find an Attack Path 
-> Since `SVC_LDAP` is a member of the `Domain Users` group, and `Domain Users` has Enroll rights on the `ClientAuth` certificate template, `SVC_LDAP` can request a certificate from this template. However, enrollment rights alone are not a vulnerability. To find out whether the template is actually exploitable, we need more information about the domain, and `certipy-ad` is very handy for this kind of enumeration
+> Since `SVC_LDAP` is a member of the `Domain Users` group, and `Domain Users` has Enroll rights on the `ClientAuth` certificate template, `SVC_LDAP` can request a certificate from this template. However, enrollment rights alone are not a vulnerability. To find out whether the template is actually exploitable, we need more information about the domain, and `certipy-ad` is very handy for this kind of enumeration.
 
 <br></br>
 
@@ -495,7 +495,18 @@ certipy-ad find -u 'svc_ldap@authority.htb' -p 'lDaP_1n_th3_cle4r!' -dc-ip 10.12
 ![[Pasted image 20261116213744.png]]
 **ESC1 is only possible from a Domain Computer.**
 
-It's possible to give domain users the permission to create domain computers, we can check if the user `svc_ldap` is permitted to do so. The `netexec` command below will output how many we can add to the domain.
+<br></br>
+
+---
+
+> [!important] What is ESC1?
+> ESC1 occurs when a certificate template allows the requester to specify an arbitrary Subject Alternative Name (SAN), has the Client Authentication EKU, and is enrollable by low-privileged users without manager approval. This means we can request a certificate while specifying any UPN we want including the Administrator's and later use that certificate to authenticate as that user.
+
+---
+<h2 style="text-align:center;color:#595454"><span style="color:#ff7b00"></span> Checking  ms-DS-MachineAccountQuota <span style="color:#ff7b00"></span></h2>
+<br></br>
+
+**It's possible to give domain users the permission to create domain computers, we can check if the user `svc_ldap` is permitted to do so. The `netexec` command below will output how many we can add to the domain.**
 
 ```
 netexec ldap 10.129.229.56 -u svc_ldap -p 'lDaP_1n_th3_cle4r!' -M maq
@@ -513,8 +524,9 @@ netexec ldap 10.129.229.56 -u svc_ldap -p 'lDaP_1n_th3_cle4r!' -M maq
 
 ---
 
-<h2 style="text-align:center;color:#595454"><span style="color:#ff7b00"></span> Add a New Domain Controller <span style="color:#ff7b00"></span></h2>
+<h3 style="text-align:center;color:#595454"><span style="color:#ff7b00"></span> Add a New Domain Controller <span style="color:#ff7b00"></span></h3>
 
+**While `svc_ldap` has enrollment rights on the `ClientAuth` template as a member of `Domain Users`, the vulnerable `CorpVPN` template is only enrollable by Domain Computer accounts — which is why we first need to create one using the Machine Account Quota.**
 <br></br>
 
 ```
@@ -526,7 +538,7 @@ Impacket v0.13.1 - Copyright Fortra, LLC and its affiliated companies
 ```
 - **The new Domain Computer was created successfully**
 
-**The command requests a certificate from the `AUTHORITY-CA` using the `CorpVPN` template, impersonating the Administrator by setting the UPN to `administrator@authority.htb`.**
+**The earlier `certipy-ad find -vulnerable` output flagged `CorpVPN` as vulnerable to ESC1: it allows enrollee-supplied subject names, grants Client Authentication, and `Domain Computers` have enrollment rights on it. This makes it the right template to target for impersonating the Administrator.** 
 ```
 certipy-ad req -username 'PENTEST$' -password 'S3cUrP455w0rD!' -ca AUTHORITY-CA -dc-ip 10.129.229.56 -template CorpVPN -upn administrator@authority.htb -dns authority.htb
 
