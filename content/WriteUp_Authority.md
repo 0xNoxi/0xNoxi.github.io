@@ -28,6 +28,7 @@
 <p align="center"><span style="color:rgb(89, 84, 84)">Topics: SMB, LDAP, AD CS, ESC1</span></p>
 
 ---
+<br></br>
 
 <h2 style="text-align:center;color:#595454"><span style="color:#ff7b00"></span> Nmap: SYN Initial Scan <span style="color:#ff7b00"></span></h2>
 <br></br>

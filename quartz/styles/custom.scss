@@ -2,14 +2,16 @@
 
 // put your custom CSS here!
 
+// ---------- Überschriften ----------
+
 h1, h2, h3, h4, h5, h6 {
   border: none;
   box-shadow: none;
 }
 
 h1::before, h1::after,
-h2::before, h2::after,
-h3::before, h3::after {
+h2::after,
+h3::after {
   content: none;
 }
 
@@ -28,4 +30,170 @@ h6::before {
 
 #particles-bg {
   z-index: 5 !important;
+}
+
+// ---------- Scanlines (wird von .terminal und .crt benutzt) ----------
+
+@mixin scanlines($inset: 0) {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: $inset;
+    pointer-events: none;
+    background:
+      linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%),
+      linear-gradient(90deg, rgba(255, 0, 0, 0.07), rgba(0, 255, 0, 0.03), rgba(0, 0, 255, 0.07));
+    background-size: 100% 3px, 4px 100%;
+    animation: crt-flicker 0.15s infinite;
+  }
+}
+
+@keyframes crt-flicker {
+  0%   { opacity: 0.28; }
+  20%  { opacity: 0.4; }
+  40%  { opacity: 0.22; }
+  60%  { opacity: 0.38; }
+  80%  { opacity: 0.25; }
+  100% { opacity: 0.34; }
+}
+
+// ---------- Terminal-Zeile ----------
+
+.terminal {
+  position: relative;
+  box-sizing: content-box;
+  display: inline-block;
+  vertical-align: bottom;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  font-family: var(--codeFont), monospace;
+    font-size: clamp(0.85rem, 2.8vw, 1.1rem);
+  font-weight: normal;
+  color: #3dff8b;
+  text-shadow: 0 0 6px rgba(61, 255, 139, 0.6);
+  width: calc(var(--n) * 1ch);
+  border-right: 0.6ch solid transparent;
+  animation:
+    terminal-typing var(--dur) steps(var(--n)) var(--delay) both,
+    terminal-cursor 1s steps(1) var(--delay) infinite;
+
+  // erste Zeile: Cursor verschwindet, sobald sie fertig getippt ist
+  &.done {
+    animation:
+      terminal-typing var(--dur) steps(var(--n)) var(--delay) both,
+      terminal-cursor 1s steps(1) var(--delay) infinite,
+      terminal-done 0.01s linear calc(var(--delay) + var(--dur)) forwards;
+  }
+
+  @include scanlines(0);
+}
+
+@keyframes terminal-typing {
+  from { width: 0; }
+}
+
+@keyframes terminal-cursor {
+  0%, 49%   { border-right-color: #3dff8b; }
+  50%, 100% { border-right-color: transparent; }
+}
+
+@keyframes terminal-done {
+  to { border-right-color: transparent; }
+}
+
+:root[saved-theme="light"] .terminal {
+  color: #0a8f3c;
+  text-shadow: none;
+}
+
+// ---------- Boot-Sequenz (mehrere Terminal-Zeilen untereinander) ----------
+
+.boot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  margin: 1.5rem 0;
+  padding: 2.8rem 1.25rem 1.25rem; // oben Platz für die Titelleiste
+  background: #0b0f0c;
+  border: 1px solid rgba(61, 255, 139, 0.35);
+  border-radius: 10px;
+  box-shadow: 0 0 24px rgba(61, 255, 139, 0.12);
+
+  // Titelleiste mit den drei Punkten
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2rem;
+    border-bottom: 1px solid rgba(61, 255, 139, 0.2);
+    border-radius: 10px 10px 0 0;
+    background:
+      radial-gradient(circle at 1rem 50%, #ff5f56 5px, transparent 6px),
+      radial-gradient(circle at 2.1rem 50%, #ffbd2e 5px, transparent 6px),
+      radial-gradient(circle at 3.2rem 50%, #27c93f 5px, transparent 6px),
+      #151b17;
+  }
+
+  // Name des Fensters, mittig in der Titelleiste
+  &::after {
+    content: attr(data-title);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2rem;
+    line-height: 2rem;
+    text-align: center;
+    font-family: var(--codeFont), monospace;
+    font-size: 0.75rem;
+    color: #7a8a80;
+  }
+}
+
+// Im hellen Theme bleibt das Terminal dunkel, also bleibt auch die Schrift hell
+:root[saved-theme="light"] .boot .terminal {
+  color: #3dff8b;
+  text-shadow: 0 0 6px rgba(61, 255, 139, 0.6);
+}
+
+// ---------- CRT-Wort ----------
+
+.crt {
+  --c: #9a9a9a;                  // Schriftfarbe
+  --g: rgba(154, 154, 154, 0.5);  // Glow-Farbe
+
+  position: relative;
+  display: inline-block;
+  color: var(--c);
+  animation: crt-text 1.6s infinite;
+
+  @include scanlines(-4px -8px);
+}
+
+// Farbkanten (rot/blau) plus Glow
+@keyframes crt-text {
+  0%, 100% { text-shadow: 0.4px 0 1px rgba(0, 30, 255, 0.5), -0.4px 0 1px rgba(255, 0, 80, 0.3), 0 0 8px var(--g), 0 0 22px var(--g); }
+  25%      { text-shadow: 2px 0 1px rgba(0, 30, 255, 0.5), -2px 0 1px rgba(255, 0, 80, 0.3), 0 0 10px var(--g), 0 0 26px var(--g); }
+  50%      { text-shadow: 0.8px 0 1px rgba(0, 30, 255, 0.5), -0.8px 0 1px rgba(255, 0, 80, 0.3), 0 0 8px var(--g), 0 0 22px var(--g); }
+  75%      { text-shadow: 1.6px 0 1px rgba(0, 30, 255, 0.5), -1.6px 0 1px rgba(255, 0, 80, 0.3), 0 0 11px var(--g), 0 0 28px var(--g); }
+}
+
+// ---------- Bewegungen abschalten, wenn der Nutzer es möchte ----------
+
+@media (prefers-reduced-motion: reduce) {
+  .crt,
+  .crt::after,
+  .terminal,
+  .terminal::after {
+    animation: none;
+  }
+
+  .terminal {
+    width: auto;
+  }
 }
