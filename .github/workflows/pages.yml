@@ -33,10 +33,7 @@ jobs:
         run: cd quartz-particles && npm ci && npm run build
 
       - name: Install Quartz plugins
-        run: |
-          mkdir -p .quartz/plugins
-          cp -a quartz-particles .quartz/plugins/quartz-particles
-          npx quartz plugin install --clean
+        run: npx quartz plugin install --from-config
 
       - name: Build Quartz
         run: npx quartz build
