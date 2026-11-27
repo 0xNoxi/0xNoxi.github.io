@@ -5,7 +5,6 @@
 <h1 style="text-align:center;font-size:2em;color:#595454"><span style="color:#ff7b00">───────//</span> Hack The Box - Authority <span style="color:#ff7b00">//───────</span></h1>
 
 <br></br>
-<br></br>
 
 > [!example] **Briefing**
 > **Authority is a medium-rated Windows machine which is part of the CPTS Preparation Track on Hack The Box.**
@@ -13,8 +12,6 @@
 > **The machine challenges users to exploit SMB misconfigurations, such as anonymous access and insufficient permissions, which can lead to the disclosure of sensitive information. Credentials discovered in the exposed files provide access to a web application running Apache Tomcat Configuration Editor.** 
 > **By accessing the Configuration Editor, we can manipulate the LDAP connection settings and capture additional credentials. These credentials allow us to exploit the ESC1 vulnerability in Active Directory Certificate Services (AD CS), obtain a certificate for the Administrator account, and ultimately gain administrative access to the domain.**
 
-<p align="center"><span style="color:rgb(89, 84, 84)"><em>In the following write-up, I would like to outline my methodology for conducting an external penetration test. I will try to explain as precisely as possible what I do and why I do it, without going into too much detail.</em></span></p>
-<br></br>
 <br></br>
 <span style="color:rgb(89, 84, 84)"><h1 style="text-align: center; font-size: 2em;"></span>
 <span style="color:rgb(89, 84, 84)"><span style="color:rgb(255, 123, 0)">───────//</span> <span style="color:rgb(89, 84, 84)">Information Gathering</span> <span style="color:rgb(255, 123, 0)">//───────</span></span>
@@ -46,7 +43,7 @@ nmap -Pn -sS -T4 -p- -v 10.129.229.56 -oA authority_initial
 | ---------- | --------------------------------------------------------------------- |
 | **`-Pn`**  | Treat all hosts as online - skip host discovery                       |
 | **`-sS`**  | SYN Scan - only scan for ports (open, closed, filtered)               |
-| **`-T4`**  | Aggressive Mode - used for a reasonably fast and reliable network     |
+| **`-T4`**  | Aggressive Mode     |
 | **`-p-`**  | scan all 65535 ports                                                  |
 | **`-v`** | verbose output                                                   |
 | **`-oA`**  | Output in the three major formats at once (normal, XML, and grepable) |
